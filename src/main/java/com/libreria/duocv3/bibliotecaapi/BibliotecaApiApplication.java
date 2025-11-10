@@ -1,4 +1,4 @@
-package com.libreria.duocv3.biblioteca_api;
+package com.libreria.duocv3.bibliotecaapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
