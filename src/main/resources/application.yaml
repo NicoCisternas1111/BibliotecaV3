@@ -14,6 +14,13 @@ spring:
         format_sql: true
     open-in-view: false
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # Si YA tienes tablas creadas y quieres “anclar” el estado actual por única vez:
+    # baseline-on-migrate: true
+    # baseline-version: 0
+
 server:
   port: 8080
 
@@ -35,3 +42,12 @@ springdoc:
   use-fqn: true
   api-docs:
     enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      show-details: "never"
