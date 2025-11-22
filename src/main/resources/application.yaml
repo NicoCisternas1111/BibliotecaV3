@@ -24,3 +24,8 @@ app:
   jwt:
     secret: ${JWT_SECRET:dev-secret-cambiar}
     expiration: ${JWT_EXP_MINUTES:60}
+
+  admin:
+    name: ${APP_ADMIN_NAME:Admin}
+    email: ${APP_ADMIN_EMAIL:admin@demo.cl}
+    password: ${APP_ADMIN_PASSWORD:Admin123!}
