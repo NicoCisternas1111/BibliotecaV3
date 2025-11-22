@@ -9,10 +9,17 @@ import org.springframework.data.repository.query.Param;
 public interface BookRepository extends JpaRepository<Book, String> {
 
     @Query("""
-        select b from Book b
-        where (:q is null or lower(b.title) like lower(concat('%',:q,'%'))
-               or lower(b.author) like lower(concat('%',:q,'%')))
-          and (:category is null or lower(b.category)=lower(:category))
-    """)
-    Page<Book> search(@Param("q") String q, @Param("category") String category, Pageable pageable);
+        SELECT b FROM Book b
+        WHERE (:q IS NULL OR LOWER(b.title)   LIKE LOWER(CONCAT('%', :q, '%'))
+                       OR LOWER(b.author)     LIKE LOWER(CONCAT('%', :q, '%'))
+                       OR LOWER(b.category)   LIKE LOWER(CONCAT('%', :q, '%')))
+          AND (:category IS NULL OR b.category = :category)
+          AND (:priceMin IS NULL OR b.price >= :priceMin)
+          AND (:priceMax IS NULL OR b.price <= :priceMax)
+        """)
+    Page<Book> search(@Param("q") String q,
+                      @Param("category") String category,
+                      @Param("priceMin") Integer priceMin,
+                      @Param("priceMax") Integer priceMax,
+                      Pageable pageable);
 }

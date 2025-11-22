@@ -24,9 +24,11 @@ public class BookController {
     public Page<Book> list(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) Integer priceMin,
+            @RequestParam(required = false) Integer priceMax,
             Pageable pageable
     ) {
-        return service.list(q, category, pageable);
+        return service.search(q, category, priceMin, priceMax, pageable);
     }
 
     @GetMapping("/{id}")

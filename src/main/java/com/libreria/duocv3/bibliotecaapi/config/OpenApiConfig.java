@@ -1,15 +1,20 @@
 package com.libreria.duocv3.bibliotecaapi.config;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.info.Info;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+
 @Configuration
-@OpenAPIDefinition(
-  info = @Info(
-    title = "Biblioteca API",
-    version = "v1",
-    description = "API REST para gestión de libros"
-  )
-)
-public class OpenApiConfig { }
+public class OpenApiConfig {
+  @Bean
+  public OpenAPI apiInfo() {
+    return new OpenAPI().info(
+      new Info()
+        .title("Biblioteca V3 API")
+        .version("v1")
+        .description("Catálogo público + administración protegida con JWT")
+    );
+  }
+}

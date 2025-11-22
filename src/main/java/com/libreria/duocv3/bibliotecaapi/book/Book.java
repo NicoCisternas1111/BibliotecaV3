@@ -1,5 +1,7 @@
 package com.libreria.duocv3.bibliotecaapi.book;
 
+import com.libreria.duocv3.bibliotecaapi.common.model.Auditable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -7,7 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class Book {
+public class Book extends Auditable {
 
     @Id
     private String id;

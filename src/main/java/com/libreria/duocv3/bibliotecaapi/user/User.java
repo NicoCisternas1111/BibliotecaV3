@@ -2,6 +2,8 @@ package com.libreria.duocv3.bibliotecaapi.user;
 
 import java.util.Objects;
 
+import com.libreria.duocv3.bibliotecaapi.common.model.Auditable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,7 +18,7 @@ import jakarta.persistence.UniqueConstraint;
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(name = "uk_users_email", columnNames = "email")
 })
-public class User {
+public class User extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
