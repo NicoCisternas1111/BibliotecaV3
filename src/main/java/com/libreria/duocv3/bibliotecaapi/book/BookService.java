@@ -1,4 +1,4 @@
-package com.libreria.duocv3.bibliotecaapi.domain.book;
+package com.libreria.duocv3.bibliotecaapi.book;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
