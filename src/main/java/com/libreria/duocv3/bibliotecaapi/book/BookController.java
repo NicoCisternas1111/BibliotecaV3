@@ -1,4 +1,4 @@
-package com.libreria.duocv3.bibliotecaapi.controller;
+package com.libreria.duocv3.bibliotecaapi.book;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,9 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.libreria.duocv3.bibliotecaapi.book.Book;
-import com.libreria.duocv3.bibliotecaapi.book.BookService;
 
 @RestController
 @RequestMapping("/api/books")

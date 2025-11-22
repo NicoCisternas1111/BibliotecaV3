@@ -15,12 +15,10 @@ public class BookService {
         this.repo = repo;
     }
 
-    // Listar libros con filtros opcionales (búsqueda y categoría)
     public Page<Book> list(String q, String category, Pageable pageable) {
         return repo.search(q, category, pageable);
     }
 
-    // Obtener un libro específico por ID (ISBN)
     public Book get(String id) {
         if (id == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ISBN no puede ser nulo");
