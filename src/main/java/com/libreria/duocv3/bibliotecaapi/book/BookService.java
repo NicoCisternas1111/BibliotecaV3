@@ -15,7 +15,6 @@ public class BookService {
         this.repo = repo;
     }
 
-    // Conveniencia: lista con q/category y sin rango de precios
     public Page<Book> list(String q, String category, Pageable pageable) {
         return repo.search(q, category, null, null, pageable);
     }

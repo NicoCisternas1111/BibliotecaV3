@@ -13,7 +13,7 @@ public interface BookRepository extends JpaRepository<Book, String> {
         WHERE (:q IS NULL OR LOWER(b.title)   LIKE LOWER(CONCAT('%', :q, '%'))
                        OR LOWER(b.author)     LIKE LOWER(CONCAT('%', :q, '%'))
                        OR LOWER(b.category)   LIKE LOWER(CONCAT('%', :q, '%')))
-          AND (:category IS NULL OR b.category = :category)
+          AND (:category IS NULL OR LOWER(b.category) = LOWER(:category))
           AND (:priceMin IS NULL OR b.price >= :priceMin)
           AND (:priceMax IS NULL OR b.price <= :priceMax)
         """)

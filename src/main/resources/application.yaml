@@ -30,3 +30,8 @@ app:
 logging:
   level:
     org.springframework.security: DEBUG
+
+springdoc:
+  use-fqn: true
+  api-docs:
+    enabled: true
