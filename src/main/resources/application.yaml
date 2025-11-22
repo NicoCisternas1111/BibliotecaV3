@@ -4,6 +4,9 @@ spring:
     username: root
     password: Admin123!
     driver-class-name: com.mysql.cj.jdbc.Driver
+    allowPublicKeyRetrieval: true
+    useSSL: false
+    serverTimezone: America/Santiago
 
   jpa:
     hibernate:
