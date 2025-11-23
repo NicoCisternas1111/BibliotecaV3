@@ -1,105 +1,86 @@
 package com.libreria.duocv3.bibliotecaapi.error;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
+import com.libreria.duocv3.bibliotecaapi.common.ErrorResponse;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler {
 
-    @Override
-    protected ResponseEntity<Object> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex, HttpHeaders headers,
-            HttpStatusCode status, org.springframework.web.context.request.WebRequest request) {
-
-        String path = request.getDescription(false).replace("uri=", "");
-        ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request",
-                "Cuerpo de la solicitud inválido o con tipos incorrectos", path);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    // Errores internos de Swagger / OpenAPI
+    @ExceptionHandler({
+            org.springdoc.api.OpenApiResourceNotFoundException.class,
+            org.springframework.web.HttpMediaTypeNotAcceptableException.class
+    })
+    public ResponseEntity<?> handleSwaggerInternalErrors(Exception ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-    @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpHeaders headers,
-            HttpStatusCode status, org.springframework.web.context.request.WebRequest request) {
+    // JSON mal formado
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleJsonParseError(HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        "JSON inválido",
+                        "El body enviado no tiene el formato correcto"
+                ));
+    }
 
-        String path = request.getDescription(false).replace("uri=", "");
+    // Errores de validación (@Valid)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+
         List<String> details = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(err -> err.getField() + ": " + 
-                     (err.getDefaultMessage() == null ? "inválido" : err.getDefaultMessage()))
-                .toList();
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.toList());
 
-        ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Validation Failed",
-                "Parámetros inválidos", path, details);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(
+                        "Error de validación",
+                        String.join(", ", details)
+                ));
     }
 
-    @Override
-    protected ResponseEntity<Object> handleMissingServletRequestParameter(
-            MissingServletRequestParameterException ex, HttpHeaders headers,
-            HttpStatusCode status, org.springframework.web.context.request.WebRequest request) {
-
-        String path = request.getDescription(false).replace("uri=", "");
-        ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request",
-                "Falta parámetro: " + ex.getParameterName(), path);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    // IllegalArgumentException (uso interno)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("Solicitud inválida", ex.getMessage()));
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
-        String msg = "Parámetro '" + ex.getName() + "' tiene valor inválido: " + ex.getValue();
-        ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request", msg, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    // 🔹 ResponseStatusException → respetar el código (400, 404, etc.)
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+
+        String title = (ex.getReason() != null && !ex.getReason().isBlank())
+                ? ex.getReason()
+                : "Error";
+
+        String detail = (ex.getMessage() != null) ? ex.getMessage() : "";
+
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(title, detail));
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest req) {
-        List<String> details = ex.getConstraintViolations()
-                .stream()
-                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                .toList();
-        ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request",
-                "Parámetros inválidos", req.getRequestURI(), details);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
-    }
-
+    // Cualquier otra cosa realmente inesperada
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGeneric(Exception ex, HttpServletRequest req) {
-
-        // ----- FIX CRÍTICO SWAGGER -----
-        String pkg = ex.getClass().getPackageName();
-
-        if (pkg.startsWith("org.springdoc") ||
-            pkg.startsWith("io.swagger") ||
-            pkg.startsWith("com.fasterxml.jackson") ||
-            pkg.startsWith("org.springframework.http.converter")) {
-
-            // Permitir que Swagger maneje su excepción
-            return null; // <-- CLAVE
-        }
-
-        ApiError body = ApiError.of(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "Ha ocurrido un error inesperado",
-                req.getRequestURI()
-        );
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    public ResponseEntity<ErrorResponse> handleGenericErrors(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse(
+                        "Ha ocurrido un error inesperado",
+                        "Si el problema persiste, contacte al administrador."
+                ));
     }
 }

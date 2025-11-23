@@ -76,7 +76,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.5.0</version> <!-- ✔ VERSIÓN CORRECTA PARA SPRING BOOT 3.5.7 -->
+            <version>2.7.0</version>
         </dependency>
 
         <!-- Flyway -->
@@ -107,13 +107,13 @@
     <build>
         <plugins>
 
-            <!-- SPRING BOOT -->
+            <!-- Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- COMPILACION -->
+            <!-- Compilación -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

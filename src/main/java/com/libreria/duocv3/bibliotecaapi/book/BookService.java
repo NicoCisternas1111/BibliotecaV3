@@ -15,17 +15,48 @@ public class BookService {
         this.repo = repo;
     }
 
-    public Page<Book> search(String q, String category, Integer priceMin, Integer priceMax, Pageable pageable) {
-        return repo.search(q, category, priceMin, priceMax, pageable);
+    // ============================================================
+    // BUSCAR / LISTAR LIBROS — devuelve Page<BookResponse>
+    // ============================================================
+    public Page<BookResponse> search(
+            String q,
+            String category,
+            Integer priceMin,
+            Integer priceMax,
+            Pageable pageable
+    ) {
+        return repo.search(q, category, priceMin, priceMax, pageable)
+                   .map(this::toResponse);  // convertimos Book → BookResponse
     }
 
-    public Book get(String id) {
-        if (id == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ID no puede ser nulo");
+    // ============================================================
+    // OBTENER DETALLE — devuelve BookResponse
+    // ============================================================
+    public BookResponse get(String id) {
 
-        return repo.findById(id)
+        if (id == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ID no puede ser nulo");
+        }
+
+        Book book = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Libro no encontrado"
                 ));
+
+        return toResponse(book);
+    }
+
+
+    // ============================================================
+    // Conversión de entidad a DTO limpio
+    // ============================================================
+    private BookResponse toResponse(Book b) {
+        return new BookResponse(
+                b.getId(),
+                b.getTitle(),
+                b.getAuthor(),
+                b.getCategory() != null ? b.getCategory().getName() : null,
+                b.getPrice()
+        );
     }
 }

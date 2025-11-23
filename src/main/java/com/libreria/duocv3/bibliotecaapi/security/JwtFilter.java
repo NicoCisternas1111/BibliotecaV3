@@ -1,6 +1,7 @@
 package com.libreria.duocv3.bibliotecaapi.security;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.http.HttpHeaders;
@@ -29,49 +30,58 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest req,
+                                    HttpServletResponse res,
+                                    FilterChain chain)
             throws ServletException, IOException {
+
+        // Si YA hay autenticación, no la tocamos
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            chain.doFilter(req, res);
+            return;
+        }
 
         String header = req.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-
-            if (jwt.isValid(token)) {
-                String email = jwt.getEmail(token);
-                String role = jwt.getRole(token);
-
-                // Validar existencia de usuario
-                try {
-                    users.loadByEmail(email);
-                } catch (Exception e) {
-                    chain.doFilter(req, res);
-                    return;
-                }
-
-                var authorities = role != null
-                        ? List.<SimpleGrantedAuthority>of(new SimpleGrantedAuthority(role))
-                        : List.<SimpleGrantedAuthority>of();
-
-                var auth = new UsernamePasswordAuthenticationToken(
-                        email,               // principal
-                        null,                // credentials
-                        authorities          // Collection<? extends GrantedAuthority>
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
+        // Si no viene Authorization Bearer, seguimos sin autenticar
+        if (header == null || !header.startsWith("Bearer ")) {
+            chain.doFilter(req, res);
+            return;
         }
 
+        String token = header.substring(7);
+
+        // Si el token es inválido, seguimos sin autenticar
+        if (!jwt.isValid(token)) {
+            chain.doFilter(req, res);
+            return;
+        }
+
+        String email = jwt.getEmail(token);
+        String role = jwt.getRole(token);
+
+        // Validar que el usuario exista
+        try {
+            users.loadByEmail(email);
+        } catch (Exception e) {
+            // Si no existe el usuario, seguimos sin autenticar
+            chain.doFilter(req, res);
+            return;
+        }
+
+        List<SimpleGrantedAuthority> authorities =
+                (role != null)
+                        ? List.of(new SimpleGrantedAuthority(role))
+                        : Collections.emptyList();
+
+        var auth = new UsernamePasswordAuthenticationToken(
+                email,      // principal
+                null,       // credentials
+                authorities // roles
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
         chain.doFilter(req, res);
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest req) {
-        String path = req.getServletPath();
-
-        return path.startsWith("/auth/")
-            || path.startsWith("/swagger-ui")
-            || path.startsWith("/v3/api-docs");
     }
 }

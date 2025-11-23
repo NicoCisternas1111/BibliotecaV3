@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -24,7 +25,7 @@ public class JwtUtil {
     private long expMinutes;
 
     private Key key() {
-        // HS256 requiere clave >= 256 bits (>= 32 chars). Usa un secreto largo en prod.
+        // HS256 requiere clave >= 256 bits (>= 32 chars)
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -34,7 +35,7 @@ public class JwtUtil {
         Date exp = new Date(now + expMinutes * 60_000);
 
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(email) // se guarda como "subject"
                 .setIssuedAt(issued)
                 .setExpiration(exp)
                 .addClaims(Map.of("role", role))
@@ -58,7 +59,23 @@ public class JwtUtil {
     }
 
     public boolean isValid(String token) {
-        try { parse(token); return true; }
-        catch (Exception e) { return false; }
+        try { 
+            parse(token); 
+            return true; 
+        } catch (Exception e) { 
+            return false; 
+        }
+    }
+
+    // 🔥 Método necesario para /auth/me
+    public String getCurrentUserEmail() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || auth.getName() == null) {
+            return null;
+        }
+
+        // auth.getName() es el email que pusimos en JwtFilter
+        return auth.getName();
     }
 }

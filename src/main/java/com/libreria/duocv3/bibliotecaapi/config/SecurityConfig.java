@@ -2,10 +2,10 @@ package com.libreria.duocv3.bibliotecaapi.config;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -17,51 +17,68 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.libreria.duocv3.bibliotecaapi.security.JwtFilter;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true) // para que @PreAuthorize funcione
 public class SecurityConfig {
 
-    @Autowired
-    private JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        return http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
+            .authorizeHttpRequests(auth -> auth
 
-                        // Publico total
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // =====================
+                //        PÚBLICO
+                // =====================
+                .requestMatchers("/auth/login", "/auth/register", "/auth/ping").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // CORS preflight
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // CORS preflight (React/Front)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Libros GET público
-                        .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
+                // Catálogo público de libros
+                .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
 
-                        // Usuario autenticado
-                        .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN")
+                // =====================
+                //    AUTENTICADOS
+                // =====================
+                // Perfil propio (/auth/me)
+                .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
 
-                        // Admin exclusivo
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Operaciones sobre el propio usuario
+                .requestMatchers("/api/users/me/**").authenticated()
 
-                        // Todo lo demás requiere auth
-                        .anyRequest().authenticated()
-                )
+                // =====================
+                //        ADMIN
+                // =====================
+                .requestMatchers("/api/categories/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                // JWT antes del filtro de autenticación por formulario
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                // =====================
+                //   TODO LO DEMÁS
+                // =====================
+                .anyRequest().authenticated()
+            )
 
-                .build();
+            // Filtro JWT antes que UsernamePasswordAuthenticationFilter
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOriginPatterns(List.of("*")); 
+        cfg.setAllowedOriginPatterns(List.of("*"));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setExposedHeaders(List.of("Authorization"));
