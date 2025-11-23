@@ -25,13 +25,13 @@ server:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dev-secret-esta-es-una-clave-larga-de-ejemplo-123456}
-    expiration: ${JWT_EXP_MINUTES:60}
+    secret: "clave-super-larga-para-jwt-que-no-va-en-github"
+    expiration: 60   # minutos
 
   admin:
-    name: ${APP_ADMIN_NAME:Admin}
-    email: ${APP_ADMIN_EMAIL:admin@demo.cl}
-    password: ${APP_ADMIN_PASSWORD:Admin123!}
+    name: "Admin Biblioteca"
+    email: "admin@biblioteca.cl"
+    password: "Admin123!"
 
 logging:
   level:

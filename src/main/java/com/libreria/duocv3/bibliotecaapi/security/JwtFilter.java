@@ -33,21 +33,45 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String header = req.getHeader(HttpHeaders.AUTHORIZATION);
+
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
+
             if (jwt.isValid(token)) {
                 String email = jwt.getEmail(token);
                 String role = jwt.getRole(token);
-                try { users.loadByEmail(email); } catch (Exception ignored) {}
+
+                // Validar existencia de usuario
+                try {
+                    users.loadByEmail(email);
+                } catch (Exception e) {
+                    chain.doFilter(req, res);
+                    return;
+                }
+
+                var authorities = role != null
+                        ? List.<SimpleGrantedAuthority>of(new SimpleGrantedAuthority(role))
+                        : List.<SimpleGrantedAuthority>of();
 
                 var auth = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        role != null ? List.of(new SimpleGrantedAuthority(role)) : List.of()
+                        email,               // principal
+                        null,                // credentials
+                        authorities          // Collection<? extends GrantedAuthority>
                 );
+
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
+
         chain.doFilter(req, res);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest req) {
+        String path = req.getServletPath();
+
+        return path.startsWith("/auth/")
+            || path.startsWith("/swagger-ui")
+            || path.startsWith("/v3/api-docs");
     }
 }

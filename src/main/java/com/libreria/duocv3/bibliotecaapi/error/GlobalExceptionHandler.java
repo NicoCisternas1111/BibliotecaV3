@@ -5,16 +5,13 @@ import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -78,30 +75,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request",
                 "Parámetros inválidos", req.getRequestURI(), details);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
-    }
-
-    // 4xx/5xx lanzados por Spring
-    @ExceptionHandler(ErrorResponseException.class)
-    public ResponseEntity<ApiError> handleErrorResponse(ErrorResponseException ex, HttpServletRequest req) {
-        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
-
-        // Razón: si es ResponseStatusException usamos getReason(); si no, sacamos el detail del ProblemDetail
-        String reason = null;
-        if (ex instanceof ResponseStatusException rse) {
-            reason = rse.getReason();
-        }
-        if (reason == null) {
-            ProblemDetail pd = ex.getBody(); // <-- Spring 6
-            if (pd != null && pd.getDetail() != null) {
-                reason = pd.getDetail();
-            }
-        }
-        if (reason == null) {
-            reason = "Error";
-        }
-
-        ApiError body = ApiError.of(status.value(), status.getReasonPhrase(), reason, req.getRequestURI());
-        return ResponseEntity.status(status).body(body);
     }
 
     @ExceptionHandler(Exception.class)

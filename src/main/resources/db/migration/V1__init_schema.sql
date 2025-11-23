@@ -1,24 +1,39 @@
--- Esquema base según tus entidades actuales (IDs String, price INT)
+-- ===========================
+-- V1: INIT SCHEMA
+-- Creación inicial de tablas
+-- ===========================
 
-CREATE TABLE IF NOT EXISTS users (
-  id          VARCHAR(36)  PRIMARY KEY,
-  name        VARCHAR(120) NOT NULL,
-  email       VARCHAR(160) NOT NULL UNIQUE,
-  password    VARCHAR(255) NOT NULL,
-  role        ENUM('ROLE_ADMIN','ROLE_USER') NOT NULL,
-  created_at  TIMESTAMP NOT NULL,
-  updated_at  TIMESTAMP NOT NULL
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS book (
-  id                    VARCHAR(32)  PRIMARY KEY,
-  title                 VARCHAR(255) NOT NULL,
-  author                VARCHAR(255) NOT NULL,
-  category              VARCHAR(120) NOT NULL,
-  price                 INT NOT NULL,
-  description           TEXT,
-  extended_description  TEXT,
-  image                 VARCHAR(1024),
-  created_at            TIMESTAMP NOT NULL,
-  updated_at            TIMESTAMP NOT NULL
+CREATE TABLE book (
+    id CHAR(36) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    category VARCHAR(255) NOT NULL,
+    price INT NOT NULL,
+    description VARCHAR(2048),
+    extended_description VARCHAR(4096),
+    image VARCHAR(255),
+    stock INT NOT NULL DEFAULT 0,
+    
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
 );
+
+-- ===========================
+-- Índices recomendados
+-- ===========================
+
+CREATE INDEX idx_book_title ON book (title);
+CREATE INDEX idx_book_category ON book (category);
+CREATE INDEX idx_book_price ON book (price);

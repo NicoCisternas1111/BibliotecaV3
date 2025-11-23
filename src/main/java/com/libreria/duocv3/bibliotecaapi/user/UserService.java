@@ -1,32 +1,33 @@
 package com.libreria.duocv3.bibliotecaapi.user;
 
-import com.libreria.duocv3.bibliotecaapi.user.dto.CreateUserRequest;
-import com.libreria.duocv3.bibliotecaapi.user.dto.UserResponse;
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
+import com.libreria.duocv3.bibliotecaapi.user.dto.CreateUserRequest;
+import com.libreria.duocv3.bibliotecaapi.user.dto.UserResponse;
 
 @Service
 public class UserService {
 
-    private final UserRepository repo;
+    private final UserRepository userRepo;
     private final PasswordEncoder encoder;
 
-    public UserService(UserRepository repo, PasswordEncoder encoder) {
-        this.repo = repo;
+    public UserService(UserRepository userRepo, PasswordEncoder encoder) {
+        this.userRepo = userRepo;
         this.encoder = encoder;
     }
 
     public User loadByEmail(String email) {
-        return repo.findByEmail(email)
+        return userRepo.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no existe: " + email));
     }
 
     public UserResponse createClient(CreateUserRequest req) {
-        Optional<User> existing = repo.findByEmail(req.email());
+        Optional<User> existing = userRepo.findByEmail(req.email());
         if (existing.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ya registrado");
         }
@@ -35,7 +36,7 @@ public class UserService {
         u.setEmail(req.email());
         u.setRole(Role.ROLE_USER);
         u.setPassword(encoder.encode(req.password()));
-        u = repo.save(u);
+        u = userRepo.save(u);
         return new UserResponse(u.getId(), u.getName(), u.getEmail(), u.getRole().name());
     }
 
@@ -45,6 +46,19 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Contraseña actual inválida");
         }
         u.setPassword(encoder.encode(newPassword));
-        repo.save(u);
+        userRepo.save(u);
     }
+
+    public UserResponse findUserByEmailResponse(String email) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + email));
+
+        return new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole().name()
+        );
+    }
+
 }

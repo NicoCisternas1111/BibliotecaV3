@@ -1,9 +1,12 @@
 package com.libreria.duocv3.bibliotecaapi.book;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.libreria.duocv3.bibliotecaapi.common.model.Auditable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +15,9 @@ import jakarta.validation.constraints.NotNull;
 public class Book extends Auditable {
 
     @Id
+    @GeneratedValue(generator = "uuid")
+    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @Column(columnDefinition = "CHAR(36)")
     private String id;
 
     @NotBlank

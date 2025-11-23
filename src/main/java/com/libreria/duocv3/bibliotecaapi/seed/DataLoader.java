@@ -1,5 +1,5 @@
 package com.libreria.duocv3.bibliotecaapi.seed;
-
+/*
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import com.libreria.duocv3.bibliotecaapi.book.Book;
 import com.libreria.duocv3.bibliotecaapi.book.BookRepository;
 
-@Component
+*@Component
 public class DataLoader implements CommandLineRunner {
 
     private final BookRepository repo;
@@ -63,3 +63,4 @@ public class DataLoader implements CommandLineRunner {
         return book;
     }
 }
+*/
