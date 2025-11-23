@@ -15,19 +15,17 @@ public class BookService {
         this.repo = repo;
     }
 
-    public Page<Book> list(String q, String category, Pageable pageable) {
-        return repo.search(q, category, null, null, pageable);
-    }
-
     public Page<Book> search(String q, String category, Integer priceMin, Integer priceMax, Pageable pageable) {
         return repo.search(q, category, priceMin, priceMax, pageable);
     }
 
     public Book get(String id) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ISBN no puede ser nulo");
-        }
+        if (id == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ID no puede ser nulo");
+
         return repo.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Libro no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Libro no encontrado"
+                ));
     }
 }

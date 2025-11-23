@@ -13,8 +13,8 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE book (
-    id CHAR(36) PRIMARY KEY,
+CREATE TABLE books (
+    id VARCHAR(36) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
     category VARCHAR(255) NOT NULL,
@@ -34,6 +34,6 @@ CREATE TABLE book (
 -- Índices recomendados
 -- ===========================
 
-CREATE INDEX idx_book_title ON book (title);
-CREATE INDEX idx_book_category ON book (category);
-CREATE INDEX idx_book_price ON book (price);
+CREATE INDEX idx_book_title ON books (title);
+CREATE INDEX idx_book_category ON books (category);
+CREATE INDEX idx_book_price ON books (price);

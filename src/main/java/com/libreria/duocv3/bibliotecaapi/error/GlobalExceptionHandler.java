@@ -40,7 +40,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         List<String> details = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(err -> err.getField() + ": " + (err.getDefaultMessage() == null ? "inválido" : err.getDefaultMessage()))
+                .map(err -> err.getField() + ": " + 
+                     (err.getDefaultMessage() == null ? "inválido" : err.getDefaultMessage()))
                 .toList();
 
         ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Validation Failed",
@@ -78,9 +79,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest req) {
-        ApiError body = ApiError.of(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error",
-                "Ha ocurrido un error inesperado", req.getRequestURI());
+    public ResponseEntity<Object> handleGeneric(Exception ex, HttpServletRequest req) {
+
+        // ----- FIX CRÍTICO SWAGGER -----
+        String pkg = ex.getClass().getPackageName();
+
+        if (pkg.startsWith("org.springdoc") ||
+            pkg.startsWith("io.swagger") ||
+            pkg.startsWith("com.fasterxml.jackson") ||
+            pkg.startsWith("org.springframework.http.converter")) {
+
+            // Permitir que Swagger maneje su excepción
+            return null; // <-- CLAVE
+        }
+
+        ApiError body = ApiError.of(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                "Ha ocurrido un error inesperado",
+                req.getRequestURI()
+        );
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }

@@ -9,13 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-@Tag(name = "book-controller", description = "Catálogo público de libros")
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/books")
-@CrossOrigin(origins = "*")
 public class BookController {
 
     private final BookService service;
@@ -24,7 +20,6 @@ public class BookController {
         this.service = service;
     }
 
-    @Operation(operationId = "publicListBooks", summary = "Lista libros (público)")
     @GetMapping
     public Page<Book> list(
             @RequestParam(required = false) String q,
@@ -33,11 +28,10 @@ public class BookController {
             @RequestParam(required = false) Integer priceMax,
             Pageable pageable
     ) {
-        Pageable safe = SortValidator.validate(pageable); // valida campos de orden permitidos
+        Pageable safe = SortValidator.validate(pageable);
         return service.search(q, category, priceMin, priceMax, safe);
     }
 
-    @Operation(operationId = "publicGetBookById", summary = "Obtiene libro por id (público)")
     @GetMapping("/{id}")
     public Book get(@PathVariable String id) {
         return service.get(id);

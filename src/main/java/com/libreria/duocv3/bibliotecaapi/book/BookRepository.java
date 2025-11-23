@@ -10,16 +10,21 @@ public interface BookRepository extends JpaRepository<Book, String> {
 
     @Query("""
         SELECT b FROM Book b
-        WHERE (:q IS NULL OR LOWER(b.title)   LIKE LOWER(CONCAT('%', :q, '%'))
-                       OR LOWER(b.author)     LIKE LOWER(CONCAT('%', :q, '%'))
-                       OR LOWER(b.category)   LIKE LOWER(CONCAT('%', :q, '%')))
-          AND (:category IS NULL OR LOWER(b.category) = LOWER(:category))
-          AND (:priceMin IS NULL OR b.price >= :priceMin)
-          AND (:priceMax IS NULL OR b.price <= :priceMax)
+        WHERE 
+            (:q IS NULL OR 
+                LOWER(b.title) LIKE LOWER(CONCAT('%', :q, '%')) OR
+                LOWER(b.author) LIKE LOWER(CONCAT('%', :q, '%')) OR
+                LOWER(b.category.name) LIKE LOWER(CONCAT('%', :q, '%'))
+            )
+        AND (:category IS NULL OR LOWER(b.category.name) = LOWER(:category))
+        AND (:priceMin IS NULL OR b.price >= :priceMin)
+        AND (:priceMax IS NULL OR b.price <= :priceMax)
         """)
-    Page<Book> search(@Param("q") String q,
-                      @Param("category") String category,
-                      @Param("priceMin") Integer priceMin,
-                      @Param("priceMax") Integer priceMax,
-                      Pageable pageable);
+    Page<Book> search(
+            @Param("q") String q,
+            @Param("category") String category,
+            @Param("priceMin") Integer priceMin,
+            @Param("priceMax") Integer priceMax,
+            Pageable pageable
+    );
 }

@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 final class SortValidator {
 
     private static final Set<String> ALLOWED = Set.of(
-        "id", "title", "author", "category", "price", "createdAt", "updatedAt"
+        "id", "title", "author", "price", "createdAt", "updatedAt","category.name"
     );
 
     static Pageable validate(Pageable pageable) {

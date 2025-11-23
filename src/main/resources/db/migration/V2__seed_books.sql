@@ -1,4 +1,4 @@
-INSERT INTO book (id, title, author, category, price, stock, description, extended_description, image)
+INSERT INTO books (id, title, author, category, price, stock, description, extended_description, image)
 VALUES 
 (UUID(), 'Cien Años de Soledad', 'Gabriel García Márquez', 'Novela', 12990, 10,
  'Clásico de la literatura latinoamericana.',
