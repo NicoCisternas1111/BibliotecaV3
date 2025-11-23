@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -17,9 +17,8 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-    # Si YA tienes tablas creadas y quieres “anclar” el estado actual por única vez:
-    # baseline-on-migrate: true
-    # baseline-version: 0
+    baseline-on-migrate: true 
+    baseline-version: 0
 
 server:
   port: 8080

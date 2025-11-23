@@ -1,10 +1,16 @@
 package com.libreria.duocv3.bibliotecaapi.book;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "book-controller", description = "Catálogo público de libros")
 @RestController
@@ -27,7 +33,8 @@ public class BookController {
             @RequestParam(required = false) Integer priceMax,
             Pageable pageable
     ) {
-        return service.search(q, category, priceMin, priceMax, pageable);
+        Pageable safe = SortValidator.validate(pageable); // valida campos de orden permitidos
+        return service.search(q, category, priceMin, priceMax, safe);
     }
 
     @Operation(operationId = "publicGetBookById", summary = "Obtiene libro por id (público)")
