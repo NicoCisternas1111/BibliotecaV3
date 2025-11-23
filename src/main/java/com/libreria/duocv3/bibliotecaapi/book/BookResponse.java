@@ -8,5 +8,9 @@ public record BookResponse(
         String title,
         String author,
         String category,
-        Integer price
+        Integer price,
+        Integer stock,
+        String description,
+        String extendedDescription,
+        String image
 ) {}

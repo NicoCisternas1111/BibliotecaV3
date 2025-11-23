@@ -56,7 +56,11 @@ public class BookService {
                 b.getTitle(),
                 b.getAuthor(),
                 b.getCategory() != null ? b.getCategory().getName() : null,
-                b.getPrice()
+                b.getPrice(),
+                b.getStock(),
+                b.getDescription(),
+                b.getExtendedDescription(),
+                b.getImage()
         );
     }
 }
