@@ -47,10 +47,9 @@ public class Book extends Auditable {
     private String extendedDescription;
 
     public Book() {
-        this.id = UUID.randomUUID().toString(); // Genera ID automáticamente
+        this.id = UUID.randomUUID().toString();
     }
 
-    // 🔥 Constructor completo para el CRUD admin
     public Book(
             String title,
             String author,

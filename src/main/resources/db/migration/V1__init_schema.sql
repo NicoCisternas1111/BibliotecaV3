@@ -1,6 +1,5 @@
 -- ===========================
 -- V1: INIT SCHEMA
--- Creación inicial de tablas
 -- ===========================
 
 CREATE TABLE users (
@@ -13,11 +12,20 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Creamos la tabla categorías PRIMERO para poder relacionarla
+CREATE TABLE categories (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE TABLE books (
     id VARCHAR(36) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
-    category VARCHAR(255) NOT NULL,
+    category_id VARCHAR(36) NOT NULL,
+    
     price INT NOT NULL,
     description VARCHAR(2048),
     extended_description VARCHAR(4096),
@@ -27,13 +35,10 @@ CREATE TABLE books (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
-    updated_by VARCHAR(255)
+    updated_by VARCHAR(255),
+
+    CONSTRAINT fk_books_category FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
--- ===========================
--- Índices recomendados
--- ===========================
-
 CREATE INDEX idx_book_title ON books (title);
-CREATE INDEX idx_book_category ON books (category);
 CREATE INDEX idx_book_price ON books (price);

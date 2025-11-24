@@ -19,25 +19,18 @@ public class CategoryService {
         if (rawName == null || rawName.isBlank()) {
             throw new IllegalArgumentException("El nombre de categoría no puede estar vacío");
         }
-
-        // Normalizar: trim + lowercase
         String normalized = rawName.trim().toLowerCase();
 
         return repo.findByNameIgnoreCase(normalized)
                 .orElseGet(() -> {
                     Category c = new Category();
-                    
-                    // Capitalizamos para guardarlo bonito
                     c.setName(capitalize(normalized));
-
-                    // Generamos ID si no existe
                     c.setId(UUID.randomUUID().toString());
 
                     return repo.save(c);
                 });
     }
 
-    // Capitaliza: "ficción" → "Ficción"
     private String capitalize(String text) {
         if (text.isEmpty()) return text;
         return text.substring(0, 1).toUpperCase() + text.substring(1);

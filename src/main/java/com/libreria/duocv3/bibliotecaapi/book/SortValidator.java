@@ -7,7 +7,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Valida que el sort solo use campos permitidos. */
 final class SortValidator {
 
     private static final Set<String> ALLOWED = Set.of(

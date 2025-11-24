@@ -16,7 +16,7 @@ public class BookService {
     }
 
     // ============================================================
-    // BUSCAR / LISTAR LIBROS — devuelve Page<BookResponse>
+    // BUSCAR / LISTAR LIBROS
     // ============================================================
     public Page<BookResponse> search(
             String q,
@@ -30,7 +30,7 @@ public class BookService {
     }
 
     // ============================================================
-    // OBTENER DETALLE — devuelve BookResponse
+    // OBTENER DETALLE
     // ============================================================
     public BookResponse get(String id) {
 

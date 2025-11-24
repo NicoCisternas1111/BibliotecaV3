@@ -17,7 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.libreria.duocv3.bibliotecaapi.security.JwtFilter;
 
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true) // para que @PreAuthorize funcione
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;

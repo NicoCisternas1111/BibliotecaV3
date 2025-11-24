@@ -22,156 +22,110 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-@Tag(
-        name = "Books (Admin)",
-        description = "CRUD administrativo de libros. Requiere rol ADMIN."
-)
+@Tag(name = "Books (Admin)", description = "CRUD administrativo de libros. Requiere rol ADMIN.")
 @RestController
 @RequestMapping("/api/admin/books")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminBookController {
 
-    private final BookRepository bookRepo;
-    private final CategoryService categoryService;
+        private final BookRepository bookRepo;
+        private final CategoryService categoryService;
 
-    public AdminBookController(BookRepository bookRepo, CategoryService categoryService) {
-        this.bookRepo = bookRepo;
-        this.categoryService = categoryService;
-    }
-
-    // ============================================================
-    // CREATE
-    // ============================================================
-    @Operation(
-            summary = "Crear un libro",
-            description = "Crea un libro nuevo. Requiere rol ADMIN."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Libro creado correctamente",
-            content = @Content(schema = @Schema(implementation = BookResponse.class))
-    )
-    @ApiResponse(
-            responseCode = "400",
-            description = "Datos inválidos o categoría inválida",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-    )
-    @ApiResponse(
-            responseCode = "401",
-            description = "Token inválido o faltante",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-    )
-    @ApiResponse(
-            responseCode = "403",
-            description = "No autorizado — requiere rol ADMIN",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-    )
-    @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody BookUpsertRequest req) {
-
-        var category = categoryService.getOrCreate(req.category());
-
-        var book = new Book(
-                req.title(),
-                req.author(),
-                req.price(),
-                req.stock(),
-                req.description(),
-                req.extendedDescription(),
-                req.image(),
-                category
-        );
-
-        bookRepo.save(book);
-
-        return ResponseEntity.ok(toResponse(book));
-    }
-
-    // ============================================================
-    // UPDATE
-    // ============================================================
-    @Operation(
-            summary = "Actualizar un libro",
-            description = "Actualiza un libro existente por ID. Requiere rol ADMIN."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Libro actualizado correctamente",
-            content = @Content(schema = @Schema(implementation = BookResponse.class))
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "Libro no encontrado",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-    )
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody BookUpsertRequest req) {
-
-        var book = bookRepo.findById(id).orElse(null);
-        if (book == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Libro no encontrado", "ID: " + id));
+        public AdminBookController(BookRepository bookRepo, CategoryService categoryService) {
+                this.bookRepo = bookRepo;
+                this.categoryService = categoryService;
         }
 
-        var category = categoryService.getOrCreate(req.category());
+        // ============================================================
+        // CREATE
+        // ============================================================
+        @Operation(summary = "Crear un libro", description = "Crea un libro nuevo. Requiere rol ADMIN.")
+        @ApiResponse(responseCode = "200", description = "Libro creado correctamente", content = @Content(schema = @Schema(implementation = BookResponse.class)))
+        @ApiResponse(responseCode = "400", description = "Datos inválidos o categoría inválida", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "401", description = "Token inválido o faltante", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "403", description = "No autorizado — requiere rol ADMIN", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @PostMapping
+        public ResponseEntity<?> create(@Valid @RequestBody BookUpsertRequest req) {
 
-        book.setTitle(req.title());
-        book.setAuthor(req.author());
-        book.setPrice(req.price());
-        book.setStock(req.stock());
-        book.setDescription(req.description());
-        book.setExtendedDescription(req.extendedDescription());
-        book.setImage(req.image());
-        book.setCategory(category);
+                var category = categoryService.getOrCreate(req.category());
 
-        bookRepo.save(book);
+                var book = new Book(
+                                req.title(),
+                                req.author(),
+                                req.price(),
+                                req.stock(),
+                                req.description(),
+                                req.extendedDescription(),
+                                req.image(),
+                                category);
 
-        return ResponseEntity.ok(toResponse(book));
-    }
+                bookRepo.save(book);
 
-    // ============================================================
-    // DELETE
-    // ============================================================
-    @Operation(
-            summary = "Eliminar un libro",
-            description = "Elimina un libro por su ID. Requiere rol ADMIN."
-    )
-    @ApiResponse(
-            responseCode = "204",
-            description = "Libro eliminado correctamente"
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "Libro no encontrado",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-    )
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
-
-        if (!bookRepo.existsById(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Libro no encontrado", "ID: " + id));
+                return ResponseEntity.ok(toResponse(book));
         }
 
-        bookRepo.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
+        // ============================================================
+        // UPDATE
+        // ============================================================
+        @Operation(summary = "Actualizar un libro", description = "Actualiza un libro existente por ID. Requiere rol ADMIN.")
+        @ApiResponse(responseCode = "200", description = "Libro actualizado correctamente", content = @Content(schema = @Schema(implementation = BookResponse.class)))
+        @ApiResponse(responseCode = "404", description = "Libro no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @PutMapping("/{id}")
+        public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody BookUpsertRequest req) {
 
+                var book = bookRepo.findById(id).orElse(null);
+                if (book == null) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                        .body(new ErrorResponse("Libro no encontrado", "ID: " + id));
+                }
 
-    // ============================================================
-    // Conversión entidad → DTO
-    // ============================================================
-    private BookResponse toResponse(Book b) {
-        return new BookResponse(
-                b.getId(),
-                b.getTitle(),
-                b.getAuthor(),
-                b.getCategory() != null ? b.getCategory().getName() : null,
-                b.getPrice(),
-                b.getStock(),
-                b.getDescription(),
-                b.getExtendedDescription(),
-                b.getImage()
-        );
-    }
+                var category = categoryService.getOrCreate(req.category());
+
+                book.setTitle(req.title());
+                book.setAuthor(req.author());
+                book.setPrice(req.price());
+                book.setStock(req.stock());
+                book.setDescription(req.description());
+                book.setExtendedDescription(req.extendedDescription());
+                book.setImage(req.image());
+                book.setCategory(category);
+
+                bookRepo.save(book);
+
+                return ResponseEntity.ok(toResponse(book));
+        }
+
+        // ============================================================
+        // DELETE
+        // ============================================================
+        @Operation(summary = "Eliminar un libro", description = "Elimina un libro por su ID. Requiere rol ADMIN.")
+        @ApiResponse(responseCode = "204", description = "Libro eliminado correctamente")
+        @ApiResponse(responseCode = "404", description = "Libro no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @DeleteMapping("/{id}")
+        public ResponseEntity<?> delete(@PathVariable String id) {
+
+                if (!bookRepo.existsById(id)) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                        .body(new ErrorResponse("Libro no encontrado", "ID: " + id));
+                }
+
+                bookRepo.deleteById(id);
+                return ResponseEntity.noContent().build();
+        }
+
+        // ============================================================
+        // Conversión entidad → DTO
+        // ============================================================
+        private BookResponse toResponse(Book b) {
+                return new BookResponse(
+                                b.getId(),
+                                b.getTitle(),
+                                b.getAuthor(),
+                                b.getCategory() != null ? b.getCategory().getName() : null,
+                                b.getPrice(),
+                                b.getStock(),
+                                b.getDescription(),
+                                b.getExtendedDescription(),
+                                b.getImage());
+        }
 }

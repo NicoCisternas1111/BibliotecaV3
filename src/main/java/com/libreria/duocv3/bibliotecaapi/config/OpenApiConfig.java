@@ -12,28 +12,24 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 @Configuration
 public class OpenApiConfig {
 
-    @Bean
-    public OpenAPI apiInfo() {
+        @Bean
+        public OpenAPI apiInfo() {
 
-        final String schemeName = "BearerAuth";
+                final String schemeName = "BearerAuth";
 
-        return new OpenAPI()
-                .info(new Info()
-                        .title("Biblioteca V3 API")
-                        .version("v1")
-                        .description("Catálogo público + administración protegida con JWT")
-                )
-                // Configuración global de seguridad (Swagger muestra candado)
-                .addSecurityItem(new SecurityRequirement().addList(schemeName))
-                .components(new Components()
-                        .addSecuritySchemes(
-                                schemeName,
-                                new SecurityScheme()
-                                        .name(schemeName)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                        )
-                );
-    }
+                return new OpenAPI()
+                                .info(new Info()
+                                                .title("Biblioteca V3 API")
+                                                .version("v1")
+                                                .description("Catálogo público + administración protegida con JWT"))
+                                .addSecurityItem(new SecurityRequirement().addList(schemeName))
+                                .components(new Components()
+                                                .addSecuritySchemes(
+                                                                schemeName,
+                                                                new SecurityScheme()
+                                                                                .name(schemeName)
+                                                                                .type(SecurityScheme.Type.HTTP)
+                                                                                .scheme("bearer")
+                                                                                .bearerFormat("JWT")));
+        }
 }
