@@ -57,6 +57,10 @@ public class SecurityConfig {
                 // Operaciones sobre el propio usuario
                 .requestMatchers("/api/users/me/**").authenticated()
 
+                // Endpoint especial: permitir que cualquier usuario logueado
+                // pueda actualizar stock al comprar desde el carrito
+                .requestMatchers(HttpMethod.PUT, "/api/admin/books/**").authenticated()
+
                 // =====================
                 //        ADMIN
                 // =====================
