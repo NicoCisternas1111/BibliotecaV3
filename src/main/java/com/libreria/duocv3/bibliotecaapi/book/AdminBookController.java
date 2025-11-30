@@ -2,31 +2,27 @@ package com.libreria.duocv3.bibliotecaapi.book;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.libreria.duocv3.bibliotecaapi.book.dto.BookUpsertRequest;
 import com.libreria.duocv3.bibliotecaapi.category.CategoryService;
 import com.libreria.duocv3.bibliotecaapi.common.ErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
-@Tag(name = "Books (Admin)", description = "CRUD administrativo de libros. Requiere rol ADMIN.")
+@Tag(name = "2. Gestión de Inventario (Admin)", description = "Operaciones restringidas para administradores. Permite crear, editar y eliminar libros del sistema. Requiere autenticación con rol 'ADMIN'.")
+@SecurityRequirement(name = "BearerAuth")
 @RestController
 @RequestMapping("/api/admin/books")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminBookController {
 
         private final BookRepository bookRepo;
@@ -40,20 +36,25 @@ public class AdminBookController {
         // ============================================================
         // CREATE
         // ============================================================
-        @Operation(summary = "Registrar nuevo libro", description = """
-                        Añade un nuevo libro a la base de datos.
-                        Requisitos:
-                        - Se requiere rol ADMIN
+        @Operation(summary = "Registrar un nuevo libro", description = """
+                        Añade un nuevo libro a la base de datos y al catálogo público.
+
+                        **Requisitos:**
+                        - Se requiere rol **ADMIN**.
+                        - La categoría se crea automáticamente si no existe.
+
+                        **Validaciones:**
                         - `precio` y `stock` no pueden ser negativos.
-                        - `titulo`, `autor` y `categoria` son obligatorios.
-                        """, requestBody = @RequestBody(content = @Content(mediaType = "application/json", examples = {
-                        @ExampleObject(name = "Novela Clásica", value = "{\"title\": \"1984\", \"author\": \"George Orwell\", \"category\": \"Distopía\", \"price\": 12990, \"stock\": 50}"),
-                        @ExampleObject(name = "Libro Técnico", value = "{\"title\": \"Java a Fondo\", \"author\": \"Pablo Augusto\", \"category\": \"Programación\", \"price\": 45000, \"stock\": 10}")
-        })))
-        @ApiResponse(responseCode = "200", description = "Libro creado correctamente", content = @Content(schema = @Schema(implementation = BookResponse.class)))
-        @ApiResponse(responseCode = "400", description = "Datos inválidos o categoría inválida", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-        @ApiResponse(responseCode = "401", description = "Token inválido o faltante", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-        @ApiResponse(responseCode = "403", description = "No autorizado — requiere rol ADMIN", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                        - `titulo`, `autor` y `category` son campos obligatorios.
+                        """,
+                        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del libro a crear. Selecciona un ejemplo abajo.", content = @Content(mediaType = "application/json", examples = {
+                                        @ExampleObject(name = "Ejemplo Novela", summary = "Libro de ficción estándar", value = "{\"title\": \"Cien años de soledad\", \"author\": \"Gabriel García Márquez\", \"category\": \"Realismo Mágico\", \"price\": 15990, \"stock\": 20, \"description\": \"Obra maestra.\", \"image\": \"https://ejemplo.com/portada.jpg\"}"),
+                                        @ExampleObject(name = "Ejemplo Técnico", summary = "Libro técnico caro y con poco stock", value = "{\"title\": \"Clean Code\", \"author\": \"Robert C. Martin\", \"category\": \"Programación\", \"price\": 45000, \"stock\": 5, \"description\": \"Manual de estilo de código.\"}")
+                        })))
+        @ApiResponse(responseCode = "200", description = "Libro creado exitosamente.", content = @Content(schema = @Schema(implementation = BookResponse.class)))
+        @ApiResponse(responseCode = "400", description = "Datos inválidos (ej. precio negativo, faltan campos).", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "401", description = "No autorizado (Falta token JWT).", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "403", description = "Prohibido (El usuario no es administrador).", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         @PostMapping
         public ResponseEntity<?> create(@Valid @RequestBody BookUpsertRequest req) {
 
@@ -76,11 +77,17 @@ public class AdminBookController {
         // ============================================================
         // UPDATE
         // ============================================================
-        @Operation(summary = "Editar libro existente", description = "Actualiza totalmente los datos de un libro dado su ID. Si se omite un campo opcional, este podría quedar nulo. Se requiere rol ADMIN")
-        @ApiResponse(responseCode = "200", description = "Libro actualizado correctamente", content = @Content(schema = @Schema(implementation = BookResponse.class)))
-        @ApiResponse(responseCode = "404", description = "El libro que intentas editar no existe.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @Operation(summary = "Modificar libro existente", description = "Actualiza totalmente la información de un libro dado su ID. \n\n**Nota:** Se debe enviar el objeto JSON completo; los campos omitidos en el cuerpo de la petición podrían quedar nulos en la base de datos.")
+        @ApiResponse(responseCode = "200", description = "Libro actualizado correctamente.", content = @Content(schema = @Schema(implementation = BookResponse.class)))
+        @ApiResponse(responseCode = "404", description = "No se encontró ningún libro con el ID especificado.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+
+        // Aquí también usamos la ruta completa por consistencia y para documentar el
+        // body de entrada
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Nuevos datos del libro. Todos los campos son requeridos para una actualización completa.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookUpsertRequest.class)))
         @PutMapping("/{id}")
-        public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody BookUpsertRequest req) {
+        public ResponseEntity<?> update(
+                        @Parameter(description = "ID único del libro a editar", required = true, example = "uuid-1234-5678") @PathVariable String id,
+                        @Valid @RequestBody BookUpsertRequest req) {
 
                 var book = bookRepo.findById(id).orElse(null);
                 if (book == null) {
@@ -107,11 +114,12 @@ public class AdminBookController {
         // ============================================================
         // DELETE
         // ============================================================
-        @Operation(summary = "Eliminar libro", description = "Borra permanentemente un libro del catálogo. Esta acción no se puede deshacer. Se requiere rol ADMIN")
-        @ApiResponse(responseCode = "204", description = "Libro eliminado correctamente")
-        @ApiResponse(responseCode = "404", description = "Libro no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @Operation(summary = "Eliminar libro del catálogo", description = "Borra permanentemente el registro de un libro. Esta acción **no se puede deshacer**.")
+        @ApiResponse(responseCode = "204", description = "Libro eliminado correctamente (No devuelve contenido).")
+        @ApiResponse(responseCode = "404", description = "El libro ya no existe o el ID es incorrecto.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         @DeleteMapping("/{id}")
-        public ResponseEntity<?> delete(@PathVariable String id) {
+        public ResponseEntity<?> delete(
+                        @Parameter(description = "ID del libro a eliminar", required = true) @PathVariable String id) {
 
                 if (!bookRepo.existsById(id)) {
                         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -123,7 +131,7 @@ public class AdminBookController {
         }
 
         // ============================================================
-        // Conversión entidad → DTO
+        // Conversión
         // ============================================================
         private BookResponse toResponse(Book b) {
                 return new BookResponse(
