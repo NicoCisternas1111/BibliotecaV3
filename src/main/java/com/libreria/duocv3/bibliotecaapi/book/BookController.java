@@ -34,39 +34,41 @@ public class BookController {
         // LISTAR / BUSCAR LIBROS
         // =====================================================================
         @Operation(summary = "Buscar libros", description = """
-                        Endpoint público para buscar y listar libros mediante filtros:
-                        - texto (q)
-                        - categoría
-                        - precio mínimo / máximo
-                        - paginación y ordenamiento
+                        Recupera un listado paginado de libros del catálogo.
+                        Permite filtrar por múltiples criterios simultáneamente.
 
-                        Retorna un Page<BookResponse>.
+                        **Lógica de Filtros:**
+                        - Los filtros son acumulativos (AND).
+                        - La búsqueda de texto (`q`) es insensible a mayúsculas/minúsculas.
+                        - Si no se encuentran resultados, devuelve una página vacía, no un error.
                         """)
         @ApiResponse(responseCode = "200", description = "Resultados obtenidos correctamente", content = @Content(schema = @Schema(implementation = BookPageResponse.class)))
         @GetMapping
         public Page<BookResponse> list(
 
-                        @Parameter(description = "Texto a buscar en título o autor") @RequestParam(required = false) String q,
+                        @Parameter(description = "Texto para buscar coincidencias en Título o Autor. Ejemplo: 'Harry Potter'", example = "Cien años") @RequestParam(required = false) String q,
 
-                        @Parameter(description = "Categoría exacta del libro") @RequestParam(required = false) String category,
+                        @Parameter(description = "Nombre exacto de la categoría literaria.", example = "Ficción") @RequestParam(required = false) String category,
 
-                        @Parameter(description = "Precio mínimo") @RequestParam(required = false) Integer priceMin,
+                        @Parameter(description = "Precio mínimo en pesos chilenos (CLP).", example = "5000") @RequestParam(required = false) Integer priceMin,
 
-                        @Parameter(description = "Precio máximo") @RequestParam(required = false) Integer priceMax,
+                        @Parameter(description = "Precio máximo en pesos chilenos (CLP).", example = "30000") @RequestParam(required = false) Integer priceMax,
 
-                        @Parameter(description = "Información de paginación y ordenamiento") Pageable pageable) {
+                        @Parameter(description = "Opciones de paginación y ordenamiento. Por defecto: page=0, size=10.") Pageable pageable) {
                 Pageable safe = SortValidator.validate(pageable);
                 return service.search(q, category, priceMin, priceMax, safe);
-        }
+                }
 
         // =====================================================================
         // DETALLE DE LIBRO
         // =====================================================================
-        @Operation(summary = "Obtener un libro por ID", description = "Retorna el detalle de un libro de forma pública.")
+        @Operation(summary = "Ver detalle de un libro", description = "Obtiene la información completa de un libro específico utilizando su identificador único (ID).")
         @ApiResponse(responseCode = "200", description = "Libro encontrado", content = @Content(schema = @Schema(implementation = BookResponse.class)))
         @ApiResponse(responseCode = "404", description = "Libro no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         @GetMapping("/{id}")
-        public BookResponse get(@PathVariable String id) {
-                return service.get(id);
+        public BookResponse get(
+                @Parameter(description = "ID único del libro (String)", required = true, example = "b123-456") 
+                @PathVariable String id) {
+        return service.get(id);
         }
 }

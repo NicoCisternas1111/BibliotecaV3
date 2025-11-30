@@ -17,6 +17,7 @@ import com.libreria.duocv3.bibliotecaapi.common.ErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,7 +40,16 @@ public class AdminBookController {
         // ============================================================
         // CREATE
         // ============================================================
-        @Operation(summary = "Crear un libro", description = "Crea un libro nuevo. Requiere rol ADMIN.")
+        @Operation(summary = "Registrar nuevo libro", description = """
+                        Añade un nuevo libro a la base de datos.
+                        Requisitos:
+                        - Se requiere rol ADMIN
+                        - `precio` y `stock` no pueden ser negativos.
+                        - `titulo`, `autor` y `categoria` son obligatorios.
+                        """, requestBody = @RequestBody(content = @Content(mediaType = "application/json", examples = {
+                        @ExampleObject(name = "Novela Clásica", value = "{\"title\": \"1984\", \"author\": \"George Orwell\", \"category\": \"Distopía\", \"price\": 12990, \"stock\": 50}"),
+                        @ExampleObject(name = "Libro Técnico", value = "{\"title\": \"Java a Fondo\", \"author\": \"Pablo Augusto\", \"category\": \"Programación\", \"price\": 45000, \"stock\": 10}")
+        })))
         @ApiResponse(responseCode = "200", description = "Libro creado correctamente", content = @Content(schema = @Schema(implementation = BookResponse.class)))
         @ApiResponse(responseCode = "400", description = "Datos inválidos o categoría inválida", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         @ApiResponse(responseCode = "401", description = "Token inválido o faltante", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -48,7 +58,6 @@ public class AdminBookController {
         public ResponseEntity<?> create(@Valid @RequestBody BookUpsertRequest req) {
 
                 var category = categoryService.getOrCreate(req.category());
-
                 var book = new Book(
                                 req.title(),
                                 req.author(),
@@ -67,9 +76,9 @@ public class AdminBookController {
         // ============================================================
         // UPDATE
         // ============================================================
-        @Operation(summary = "Actualizar un libro", description = "Actualiza un libro existente por ID. Requiere rol ADMIN.")
+        @Operation(summary = "Editar libro existente", description = "Actualiza totalmente los datos de un libro dado su ID. Si se omite un campo opcional, este podría quedar nulo. Se requiere rol ADMIN")
         @ApiResponse(responseCode = "200", description = "Libro actualizado correctamente", content = @Content(schema = @Schema(implementation = BookResponse.class)))
-        @ApiResponse(responseCode = "404", description = "Libro no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "404", description = "El libro que intentas editar no existe.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         @PutMapping("/{id}")
         public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody BookUpsertRequest req) {
 
@@ -98,7 +107,7 @@ public class AdminBookController {
         // ============================================================
         // DELETE
         // ============================================================
-        @Operation(summary = "Eliminar un libro", description = "Elimina un libro por su ID. Requiere rol ADMIN.")
+        @Operation(summary = "Eliminar libro", description = "Borra permanentemente un libro del catálogo. Esta acción no se puede deshacer. Se requiere rol ADMIN")
         @ApiResponse(responseCode = "204", description = "Libro eliminado correctamente")
         @ApiResponse(responseCode = "404", description = "Libro no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         @DeleteMapping("/{id}")
